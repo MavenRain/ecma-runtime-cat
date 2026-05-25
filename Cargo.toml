@@ -1,0 +1,24 @@
+[package]
+name = "ecma-runtime-cat"
+version = "0.1.0"
+edition = "2024"
+description = "ECMAScript runtime: native built-ins (console, Math, JSON, parseInt, isNaN, ...) that the boa-cat engine exposes to scripts. Each built-in is a NativeFn registered into the initial environment. No mut, no Rc/Arc, no interior mutability, no panics."
+license = "MIT OR Apache-2.0"
+keywords = ["ecmascript", "javascript", "runtime", "builtin", "boa"]
+categories = ["development-tools"]
+
+[dependencies]
+boa-cat = "0.2"
+ecma-syntax-cat = "0.1"
+ecma-lex-cat = "0.1"
+ecma-parse-cat = "0.1"
+comp-cat-rs = "0.5"
+
+[dev-dependencies]
+proptest = "1"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+needless_pass_by_value = "warn"
+manual_map = "warn"
