@@ -1,8 +1,8 @@
 [package]
 name = "ecma-runtime-cat"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
-description = "ECMAScript runtime: native built-ins (console, Math, JSON, parseInt, isNaN, ...) that the boa-cat engine exposes to scripts.  v0.2.0 bumps to boa-cat 0.3 (accessor-property support): no source changes required since this crate installs only data properties via the backward-compatible `Object::from_properties` / `Object::with` / `Object::get` / `Object::properties` APIs."
+description = "ECMAScript runtime: native built-ins (console, Math, JSON, parseInt, isNaN, ...) that the boa-cat engine exposes to scripts.  v0.2.1 bumps to ecma-parse-cat 0.2 + boa-cat 0.3.1 so the shared AST types stay aligned across the workspace; no source changes since this crate doesn't itself parse user scripts and installs only data properties via the backward-compatible `Object::from_properties` / `Object::with` / `Object::get` / `Object::properties` APIs."
 license = "MIT OR Apache-2.0"
 keywords = ["ecmascript", "javascript", "runtime", "builtin", "boa"]
 categories = ["development-tools"]
@@ -11,7 +11,7 @@ categories = ["development-tools"]
 boa-cat = "0.3"
 ecma-syntax-cat = "0.1"
 ecma-lex-cat = "0.1"
-ecma-parse-cat = "0.1"
+ecma-parse-cat = "0.2"
 comp-cat-rs = "0.5"
 
 [dev-dependencies]
