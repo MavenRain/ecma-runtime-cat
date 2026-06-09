@@ -16,7 +16,7 @@ pub fn to_number(value: &Value) -> f64 {
         Value::Boolean(true) => 1.0,
         Value::Number(n) => *n,
         Value::String(s) => string_to_number(s),
-        Value::Object(_) | Value::Function(_) | Value::Native(_) => f64::NAN,
+        Value::Object(_) | Value::Function(_) | Value::Native(_) | Value::Promise(_) => f64::NAN,
     }
 }
 
@@ -43,6 +43,7 @@ pub fn to_string(value: &Value, _heap: &Heap) -> String {
         Value::Object(id) => format!("[object Object#{}]", id.raw()),
         Value::Function(id) => format!("function fn#{}() {{ [native code] }}", id.raw()),
         Value::Native(_) => "function () { [native code] }".to_owned(),
+        Value::Promise(_) => "[object Promise]".to_owned(),
     }
 }
 

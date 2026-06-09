@@ -22,7 +22,7 @@ fn stringify_impl(args: Vec<Value>, _this: Value, heap: Heap, fuel: Fuel) -> Eva
 
 fn stringify_value(value: &Value, heap: &Heap) -> Option<String> {
     match value {
-        Value::Undefined | Value::Function(_) | Value::Native(_) => None,
+        Value::Undefined | Value::Function(_) | Value::Native(_) | Value::Promise(_) => None,
         Value::Null => Some("null".to_owned()),
         Value::Boolean(b) => Some(b.to_string()),
         Value::Number(n) => {

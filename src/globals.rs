@@ -141,7 +141,7 @@ pub fn boolean_impl(args: Vec<Value>, _this: Value, heap: Heap, fuel: Fuel) -> E
         Value::Boolean(b) => b,
         Value::Number(n) => !(n.is_nan() || n == 0.0),
         Value::String(s) => !s.is_empty(),
-        Value::Object(_) | Value::Function(_) | Value::Native(_) => true,
+        Value::Object(_) | Value::Function(_) | Value::Native(_) | Value::Promise(_) => true,
     };
     Ok((Outcome::Normal(Value::Boolean(b)), heap, fuel))
 }

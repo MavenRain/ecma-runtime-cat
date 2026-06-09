@@ -40,6 +40,7 @@ pub mod error;
 pub mod globals;
 pub mod json;
 pub mod math;
+pub mod promise;
 
 use boa_cat::Value;
 use boa_cat::env::Env;
@@ -64,6 +65,7 @@ pub fn install(env: Env, heap: Heap) -> (Env, Heap) {
     let (console_value, heap) = console::build(heap);
     let (math_value, heap) = math::build(heap);
     let (json_value, heap) = json::build(heap);
+    let (promise_value, heap) = promise::build(heap);
     let bindings: Vec<(&str, Value)> = vec![
         ("undefined", Value::Undefined),
         ("NaN", Value::Number(f64::NAN)),
@@ -71,6 +73,7 @@ pub fn install(env: Env, heap: Heap) -> (Env, Heap) {
         ("console", console_value),
         ("Math", math_value),
         ("JSON", json_value),
+        ("Promise", promise_value),
         ("parseInt", Value::Native(globals::parse_int_impl)),
         ("parseFloat", Value::Native(globals::parse_float_impl)),
         ("isNaN", Value::Native(globals::is_nan_impl)),
