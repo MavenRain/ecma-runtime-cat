@@ -1,17 +1,17 @@
 [package]
 name = "ecma-runtime-cat"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
-description = "ECMAScript runtime: native built-ins (console, Math, JSON, parseInt, isNaN, Promise, ...) that the boa-cat engine exposes to scripts.  v0.3.0 adds the `Promise` global with `resolve(v)`, `reject(v)`, `all(arr)`, and `race(arr)` static methods, wrapping the boa-cat 0.6 promise infrastructure (`Heap::alloc_promise`, microtask driver, `.then` / `.catch` dispatch).  `Promise.resolve(p)` short-circuits for existing promises per spec; `all` / `race` over fully-settled inputs work synchronously, and the Pending-input orchestration lands once boa-cat ships continuation-passing transforms."
+description = "ECMAScript runtime: native built-ins (console, Math, JSON, parseInt, isNaN, Promise, ...) that the boa-cat engine exposes to scripts.  v0.3.1 bumps to boa-cat 0.7 + ecma-parse-cat 0.3 so the shared parser / AST version tracks across the workspace; no source change since this crate doesn't itself parse user scripts and the v0.3 Promise built-in already targets the boa-cat 0.6-style promise API."
 license = "MIT OR Apache-2.0"
 keywords = ["ecmascript", "javascript", "runtime", "builtin", "boa"]
 categories = ["development-tools"]
 
 [dependencies]
-boa-cat = "0.6"
+boa-cat = "0.7"
 ecma-syntax-cat = "0.1"
 ecma-lex-cat = "0.1"
-ecma-parse-cat = "0.2"
+ecma-parse-cat = "0.3"
 comp-cat-rs = "0.5"
 
 [dev-dependencies]
