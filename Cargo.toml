@@ -1,8 +1,8 @@
 [package]
 name = "ecma-runtime-cat"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2024"
-description = "ECMAScript runtime: native built-ins (console, Math, JSON, parseInt, isNaN, Promise, ...) that the boa-cat engine exposes to scripts.  v0.3.1 bumps to boa-cat 0.7 + ecma-parse-cat 0.3 so the shared parser / AST version tracks across the workspace; no source change since this crate doesn't itself parse user scripts and the v0.3 Promise built-in already targets the boa-cat 0.6-style promise API."
+description = "ECMAScript runtime: native built-ins (console, Math, JSON, parseInt, isNaN, Promise, ...) that the boa-cat engine exposes to scripts.  v0.3.2 adds `JSON.parse(source)` alongside the existing `JSON.stringify`: a hand-rolled recursive-descent JSON parser that handles null / booleans / numbers (including scientific notation) / strings (with `\\\"` / `\\\\` / control-character / `\\uXXXX` escapes) / arrays / objects and rebuilds them as boa-cat `Value`s on the heap.  Throws `SyntaxError` on malformed input; the heap is snapshotted and restored on the error path so partial allocations don't leak."
 license = "MIT OR Apache-2.0"
 keywords = ["ecmascript", "javascript", "runtime", "builtin", "boa"]
 categories = ["development-tools"]
