@@ -38,6 +38,7 @@ pub mod array;
 pub mod coercion;
 pub mod console;
 pub mod error;
+pub mod error_constructors;
 pub mod globals;
 pub mod json;
 pub mod math;
@@ -87,6 +88,31 @@ pub fn install(env: Env, heap: Heap) -> (Env, Heap) {
         ("Number", Value::Native(globals::number_impl)),
         ("String", Value::Native(globals::string_impl)),
         ("Boolean", Value::Native(globals::boolean_impl)),
+        ("Error", Value::Native(error_constructors::error_impl)),
+        (
+            "TypeError",
+            Value::Native(error_constructors::type_error_impl),
+        ),
+        (
+            "RangeError",
+            Value::Native(error_constructors::range_error_impl),
+        ),
+        (
+            "SyntaxError",
+            Value::Native(error_constructors::syntax_error_impl),
+        ),
+        (
+            "ReferenceError",
+            Value::Native(error_constructors::reference_error_impl),
+        ),
+        (
+            "EvalError",
+            Value::Native(error_constructors::eval_error_impl),
+        ),
+        (
+            "URIError",
+            Value::Native(error_constructors::uri_error_impl),
+        ),
     ];
     bindings
         .into_iter()

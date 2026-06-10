@@ -1,8 +1,8 @@
 [package]
 name = "ecma-runtime-cat"
-version = "0.3.4"
+version = "0.3.5"
 edition = "2024"
-description = "ECMAScript runtime: native built-ins (console, Math, JSON, parseInt, isNaN, Promise, Object, Array, ...) that the boa-cat engine exposes to scripts.  v0.3.4 adds `Promise.allSettled(arr)` and `Promise.any(arr)`.  `allSettled` resolves with a per-input `{ status, value }` / `{ status, reason }` record, never short-circuiting.  `any` resolves with the first fulfilled input and rejects with an `AggregateError`-shaped object carrying every rejection reason when all inputs reject.  Both throw `TypeError` on Pending inputs for the same reason as `all` / `race`."
+description = "ECMAScript runtime: native built-ins (console, Math, JSON, parseInt, isNaN, Promise, Object, Array, Error, ...) that the boa-cat engine exposes to scripts.  v0.3.5 adds the seven standard error constructors `Error`, `TypeError`, `RangeError`, `SyntaxError`, `ReferenceError`, `EvalError`, `URIError`.  Each is callable as `Error(message)` or `new Error(message)` and returns an Object with `name` (the constructor's name) and `message` (the first argument coerced via `to_string`)."
 license = "MIT OR Apache-2.0"
 keywords = ["ecmascript", "javascript", "runtime", "builtin", "boa"]
 categories = ["development-tools"]
