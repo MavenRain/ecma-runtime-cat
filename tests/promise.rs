@@ -130,3 +130,122 @@ fn typeof_promise_resolve_is_object() -> Result<(), Error> {
         .then_some(())
         .ok_or_else(|| fail("expected 'object'"))
 }
+
+#[test]
+fn promise_all_settled_returns_one_record_per_input() -> Result<(), Error> {
+    let value = eval(
+        "let captured = -1;
+        Promise.allSettled([Promise.resolve(1), Promise.resolve(2)]).then(arr => { captured = arr.length; });
+        captured",
+    )?;
+    matches!(value, Value::Number(n) if (n - 2.0).abs() < 1e-9)
+        .then_some(())
+        .ok_or_else(|| fail("expected 2 records from allSettled"))
+}
+
+#[test]
+fn promise_all_settled_records_carry_status_and_value() -> Result<(), Error> {
+    let value = eval(
+        "let captured = '';
+        Promise.allSettled([Promise.resolve(7)]).then(arr => {
+            captured = arr[0].status + ':' + arr[0].value;
+        });
+        captured",
+    )?;
+    matches!(value, Value::String(ref s) if s == "fulfilled:7")
+        .then_some(())
+        .ok_or_else(|| fail("expected 'fulfilled:7'"))
+}
+
+#[test]
+fn promise_all_settled_records_rejected_carry_reason() -> Result<(), Error> {
+    let value = eval(
+        "let captured = '';
+        Promise.allSettled([Promise.reject('nope')]).then(arr => {
+            captured = arr[0].status + ':' + arr[0].reason;
+        });
+        captured",
+    )?;
+    matches!(value, Value::String(ref s) if s == "rejected:nope")
+        .then_some(())
+        .ok_or_else(|| fail("expected 'rejected:nope'"))
+}
+
+#[test]
+fn promise_all_settled_does_not_short_circuit_on_rejection() -> Result<(), Error> {
+    // Unlike Promise.all, allSettled processes every input even
+    // when one rejects.
+    let value = eval(
+        "let count = -1;
+        Promise.allSettled([Promise.resolve(1), Promise.reject('oops'), Promise.resolve(3)])
+            .then(arr => { count = arr.length; });
+        count",
+    )?;
+    matches!(value, Value::Number(n) if (n - 3.0).abs() < 1e-9)
+        .then_some(())
+        .ok_or_else(|| fail("expected 3 records (no short-circuit)"))
+}
+
+#[test]
+fn promise_any_resolves_with_first_fulfilled() -> Result<(), Error> {
+    let value = eval(
+        "let captured = -1;
+        Promise.any([Promise.reject('a'), Promise.resolve(99), Promise.resolve(2)])
+            .then(v => { captured = v; });
+        captured",
+    )?;
+    matches!(value, Value::Number(n) if (n - 99.0).abs() < 1e-9)
+        .then_some(())
+        .ok_or_else(|| fail("expected 99 from any"))
+}
+
+#[test]
+fn promise_any_resolves_when_first_input_fulfills() -> Result<(), Error> {
+    let value = eval(
+        "let captured = -1;
+        Promise.any([Promise.resolve('hi'), Promise.reject('nope')])
+            .then(v => { captured = v; });
+        captured",
+    )?;
+    matches!(value, Value::String(ref s) if s == "hi")
+        .then_some(())
+        .ok_or_else(|| fail("expected 'hi' from any (first input wins)"))
+}
+
+#[test]
+fn promise_any_rejects_with_aggregate_error_when_all_reject() -> Result<(), Error> {
+    let value = eval(
+        "let name = '';
+        Promise.any([Promise.reject('a'), Promise.reject('b')])
+            .catch(e => { name = e.name; });
+        name",
+    )?;
+    matches!(value, Value::String(ref s) if s == "AggregateError")
+        .then_some(())
+        .ok_or_else(|| fail("expected AggregateError name"))
+}
+
+#[test]
+fn promise_any_aggregate_error_carries_all_reasons() -> Result<(), Error> {
+    let value = eval(
+        "let captured = '';
+        Promise.any([Promise.reject('a'), Promise.reject('b'), Promise.reject('c')])
+            .catch(e => { captured = e.errors[0] + e.errors[1] + e.errors[2]; });
+        captured",
+    )?;
+    matches!(value, Value::String(ref s) if s == "abc")
+        .then_some(())
+        .ok_or_else(|| fail("expected 'abc' from aggregate errors"))
+}
+
+#[test]
+fn promise_any_empty_input_rejects() -> Result<(), Error> {
+    let value = eval(
+        "let name = '';
+        Promise.any([]).catch(e => { name = e.name; });
+        name",
+    )?;
+    matches!(value, Value::String(ref s) if s == "AggregateError")
+        .then_some(())
+        .ok_or_else(|| fail("expected AggregateError for empty input"))
+}

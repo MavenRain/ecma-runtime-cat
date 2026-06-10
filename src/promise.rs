@@ -35,6 +35,8 @@ pub fn build(heap: Heap) -> (Value, Heap) {
     let _ = props.insert("reject".to_owned(), Value::Native(reject_impl));
     let _ = props.insert("all".to_owned(), Value::Native(all_impl));
     let _ = props.insert("race".to_owned(), Value::Native(race_impl));
+    let _ = props.insert("allSettled".to_owned(), Value::Native(all_settled_impl));
+    let _ = props.insert("any".to_owned(), Value::Native(any_impl));
     let (id, heap) = heap.alloc_object(Object::from_properties(props));
     (Value::Object(id), heap)
 }
@@ -127,6 +129,130 @@ fn race_impl(args: Vec<Value>, _this: Value, heap: Heap, fuel: Fuel) -> EvalResu
             fuel,
         )),
     }
+}
+
+/// `Promise.allSettled(arr)` (v0.3.4): like `Promise.all` but
+/// resolves with one result-record per input regardless of
+/// disposition.  Each record is a `{ status, value }` or
+/// `{ status, reason }` object per ECMA-262.  Pending inputs still
+/// throw `TypeError` for the same reason as `all` -- no CPS
+/// transform in this engine yet.
+#[allow(clippy::needless_pass_by_value, clippy::unnecessary_wraps)]
+fn all_settled_impl(args: Vec<Value>, _this: Value, heap: Heap, fuel: Fuel) -> EvalResult {
+    let array = args.first().cloned().unwrap_or(Value::Undefined);
+    let entries = array_entries(&array, &heap);
+    let any_pending = entries
+        .iter()
+        .any(|value| classify_entry(value, &heap).is_none());
+    if any_pending {
+        Ok((
+            Outcome::Throw(type_error(
+                "Promise.allSettled over Pending inputs is unsupported in this engine's synchronous model",
+            )),
+            heap,
+            fuel,
+        ))
+    } else {
+        let classified: Vec<Settled> = entries
+            .into_iter()
+            .filter_map(|v| classify_entry(&v, &heap))
+            .collect();
+        let (records, heap) =
+            classified
+                .into_iter()
+                .fold((Vec::new(), heap), |(acc, heap), settled| {
+                    let (record, heap) = build_settled_record(settled, heap);
+                    let extended: Vec<Value> =
+                        acc.into_iter().chain(std::iter::once(record)).collect();
+                    (extended, heap)
+                });
+        let (array_value, heap) = build_array_object(records, heap);
+        let (id, heap) = heap.alloc_promise(PromiseState::Resolved(array_value));
+        Ok((Outcome::Normal(Value::Promise(id)), heap, fuel))
+    }
+}
+
+/// `Promise.any(arr)` (v0.3.4): returns a Promise resolved with the
+/// first fulfilled input.  If every input rejects, the result is
+/// rejected with an `AggregateError`-shaped object (an Object
+/// carrying `name: "AggregateError"`, `message`, and `errors`
+/// array of every input's rejection reason).  Empty input lists
+/// reject directly per spec (no fulfilment is possible).  Pending
+/// inputs throw `TypeError` for the same reason as `all`.
+#[allow(clippy::needless_pass_by_value, clippy::unnecessary_wraps)]
+fn any_impl(args: Vec<Value>, _this: Value, heap: Heap, fuel: Fuel) -> EvalResult {
+    let array = args.first().cloned().unwrap_or(Value::Undefined);
+    let entries = array_entries(&array, &heap);
+    let any_pending = entries
+        .iter()
+        .any(|value| classify_entry(value, &heap).is_none());
+    if any_pending {
+        Ok((
+            Outcome::Throw(type_error(
+                "Promise.any over Pending inputs is unsupported in this engine's synchronous model",
+            )),
+            heap,
+            fuel,
+        ))
+    } else {
+        let classified: Vec<Settled> = entries
+            .into_iter()
+            .filter_map(|v| classify_entry(&v, &heap))
+            .collect();
+        let first_fulfilled = classified.iter().find_map(|s| match s {
+            Settled::Resolved(v) => Some(v.clone()),
+            Settled::Rejected(_) => None,
+        });
+        // `if let` here (not `map_or_else`) because both branches
+        // need to move `heap`, which the closure pair can't express
+        // without cloning.
+        if let Some(value) = first_fulfilled {
+            let (id, heap) = heap.alloc_promise(PromiseState::Resolved(value));
+            Ok((Outcome::Normal(Value::Promise(id)), heap, fuel))
+        } else {
+            aggregate_rejection(&classified, heap, fuel)
+        }
+    }
+}
+
+fn build_settled_record(settled: Settled, heap: Heap) -> (Value, Heap) {
+    let mut props = BTreeMap::new();
+    match settled {
+        Settled::Resolved(value) => {
+            let _ = props.insert("status".to_owned(), Value::String("fulfilled".to_owned()));
+            let _ = props.insert("value".to_owned(), value);
+        }
+        Settled::Rejected(value) => {
+            let _ = props.insert("status".to_owned(), Value::String("rejected".to_owned()));
+            let _ = props.insert("reason".to_owned(), value);
+        }
+    }
+    let (id, heap) = heap.alloc_object(Object::from_properties(props));
+    (Value::Object(id), heap)
+}
+
+#[allow(clippy::unnecessary_wraps)] // EvalResult-shaped to slot into the caller's combinator chain
+fn aggregate_rejection(classified: &[Settled], heap: Heap, fuel: Fuel) -> EvalResult {
+    let reasons: Vec<Value> = classified
+        .iter()
+        .map(|s| match s {
+            Settled::Resolved(v) | Settled::Rejected(v) => v.clone(),
+        })
+        .collect();
+    let (errors_array, heap) = build_array_object(reasons, heap);
+    let mut props = BTreeMap::new();
+    let _ = props.insert(
+        "name".to_owned(),
+        Value::String("AggregateError".to_owned()),
+    );
+    let _ = props.insert(
+        "message".to_owned(),
+        Value::String("All promises were rejected".to_owned()),
+    );
+    let _ = props.insert("errors".to_owned(), errors_array);
+    let (error_id, heap) = heap.alloc_object(Object::from_properties(props));
+    let (promise_id, heap) = heap.alloc_promise(PromiseState::Rejected(Value::Object(error_id)));
+    Ok((Outcome::Normal(Value::Promise(promise_id)), heap, fuel))
 }
 
 enum SettleAll {

@@ -1,8 +1,8 @@
 [package]
 name = "ecma-runtime-cat"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2024"
-description = "ECMAScript runtime: native built-ins (console, Math, JSON, parseInt, isNaN, Promise, Object, Array, ...) that the boa-cat engine exposes to scripts.  v0.3.3 adds `Object.{keys, values, entries, assign}` and `Array.isArray` static methods.  All four `Object` methods walk own data properties and skip the synthetic `length` slot when the source looks like an array; `Object.assign` also copies accessor pairs onto the target so getter/setter semantics survive the merge.  `Array.isArray(value)` returns `true` when `value` is an object whose own data-property keys are numeric or `length`."
+description = "ECMAScript runtime: native built-ins (console, Math, JSON, parseInt, isNaN, Promise, Object, Array, ...) that the boa-cat engine exposes to scripts.  v0.3.4 adds `Promise.allSettled(arr)` and `Promise.any(arr)`.  `allSettled` resolves with a per-input `{ status, value }` / `{ status, reason }` record, never short-circuiting.  `any` resolves with the first fulfilled input and rejects with an `AggregateError`-shaped object carrying every rejection reason when all inputs reject.  Both throw `TypeError` on Pending inputs for the same reason as `all` / `race`."
 license = "MIT OR Apache-2.0"
 keywords = ["ecmascript", "javascript", "runtime", "builtin", "boa"]
 categories = ["development-tools"]
