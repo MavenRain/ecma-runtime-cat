@@ -34,12 +34,14 @@
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_wrap)]
 
+pub mod array;
 pub mod coercion;
 pub mod console;
 pub mod error;
 pub mod globals;
 pub mod json;
 pub mod math;
+pub mod object;
 pub mod promise;
 
 use boa_cat::Value;
@@ -66,6 +68,8 @@ pub fn install(env: Env, heap: Heap) -> (Env, Heap) {
     let (math_value, heap) = math::build(heap);
     let (json_value, heap) = json::build(heap);
     let (promise_value, heap) = promise::build(heap);
+    let (object_value, heap) = object::build(heap);
+    let (array_value, heap) = array::build(heap);
     let bindings: Vec<(&str, Value)> = vec![
         ("undefined", Value::Undefined),
         ("NaN", Value::Number(f64::NAN)),
@@ -74,6 +78,8 @@ pub fn install(env: Env, heap: Heap) -> (Env, Heap) {
         ("Math", math_value),
         ("JSON", json_value),
         ("Promise", promise_value),
+        ("Object", object_value),
+        ("Array", array_value),
         ("parseInt", Value::Native(globals::parse_int_impl)),
         ("parseFloat", Value::Native(globals::parse_float_impl)),
         ("isNaN", Value::Native(globals::is_nan_impl)),
